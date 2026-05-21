@@ -277,6 +277,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
     <button class="pin-key" style="font-size:13px;color:var(--muted)" onclick="pk('del')">⌫</button>
   </div>
   <div class="pin-err" id="pin-err"></div>
+  <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);text-align:center">
+    <div style="font-size:11px;color:var(--muted);font-weight:600">Powered by</div>
+    <div style="font-size:13px;font-weight:800;color:var(--blue2);margin-top:3px">CA Atik Bhayani</div>
+    <a href="tel:+917057164441" style="font-size:12px;color:var(--muted);text-decoration:none;display:block;margin-top:2px">📞 +91 70571 64441</a>
+  </div>
 </div>
 </div>
 
@@ -1003,12 +1008,12 @@ async function saveSal(role){
   const date=document.getElementById(pfx+"-date")?.value;
   if(!date){ toast("Select a date","err"); return; }
   const pay=getPayInfo(pfx);
-  const rows=[],errs=[];
+  const rows=[],errs=[],missingRate=[];
   PRODUCTS.forEach(p=>{
     const qty=parseFloat(document.getElementById(`${pfx}-q-${p.id}`)?.value)||0;
     const rate=parseFloat(document.getElementById(`${pfx}-r-${p.id}`)?.value)||0;
     if(!qty) return;
-    if(!rate){ toast("Enter rate for "+p.name,"err"); return; }
+    if(!rate){ missingRate.push({pid:p.id,name:p.name}); return; }
     const stk=getStock(p.id);
     if(qty>stk){ errs.push(`${p.name}: need ${qty}, only ${stk} available`); return; }
     const lineTotal=+(qty*rate).toFixed(2);
@@ -1020,6 +1025,20 @@ async function saveSal(role){
     const crAmt=pay.creditAmt===-1?(pay.payMode==="credit"?lineTotal:0):pay.creditAmt;
     rows.push({date,saleType:type,party,payMode:pay.payMode,cashAmt:cAmt,upiAmt:uAmt,creditAmt:crAmt,prod:p.id,name:p.name,cat:p.cat,hsn:p.hsn,qty,unit:p.unit,mrp:p.mrp,rate,gst,taxable,cgstAmt,sgstAmt:cgstAmt,lineTotal,createdBy:role});
   });
+  // Block save if any item has qty but no rate
+  if(missingRate.length){
+    const names=missingRate.map(x=>x.name.split(" ").slice(0,3).join(" ")).join(", ");
+    const choice=confirm(`These items have qty but no rate:\n${names}\n\nPress OK to clear their qty and continue.\nPress Cancel to go back and enter rates.`);
+    if(!choice) return; // go back
+    // Clear qty for items with missing rate
+    missingRate.forEach(x=>{
+      const qi=document.getElementById(`${pfx}-q-${x.pid}`); if(qi) qi.value="";
+      const ai=document.getElementById(`${pfx}-a-${x.pid}`); if(ai) ai.textContent="";
+      const ri=document.getElementById(`${pfx}-row-${x.pid}`); if(ri) ri.classList.remove("has");
+    });
+    recalcSal(pfx);
+    if(!rows.length){ toast("No items left to save","err"); return; }
+  }
   document.querySelectorAll(`[id^="${pfx}m-mrow-"]`).forEach(row=>{ const id=row.dataset.id,nm=document.getElementById(`${pfx}m-mn-${id}`)?.value.trim(),qty=parseFloat(document.getElementById(`${pfx}m-mq-${id}`)?.value)||0,rate=parseFloat(document.getElementById(`${pfx}m-mr-${id}`)?.value)||0,unit=document.getElementById(`${pfx}m-mu-${id}`)?.value||"NOS"; if(nm&&qty&&rate){
     const mlt=+(qty*rate).toFixed(2);
     const mcAmt=pay.payMode==="cash"?mlt:pay.payMode==="mix"?pay.cashAmt:0;
