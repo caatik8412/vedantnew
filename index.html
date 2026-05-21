@@ -943,7 +943,8 @@ function calcMix(pfx){
 function getPayInfo(pfx){
   const who=pfx==="sal"?"s":"o", type=sPay[who];
   if(type==="mix") return{payMode:"mix",cashAmt:parseFloat(document.getElementById(pfx+"-mc")?.value)||0,upiAmt:parseFloat(document.getElementById(pfx+"-mu")?.value)||0,creditAmt:parseFloat(document.getElementById(pfx+"-mcr")?.value)||0};
-  return{payMode:type,cashAmt:0,upiAmt:0,creditAmt:0};
+  // For single mode — amounts will be set per line item based on lineTotal
+  return{payMode:type,cashAmt:-1,upiAmt:-1,creditAmt:-1}; // -1 = use lineTotal
 }
 
 // ── MANUAL ROWS ───────────────────────────────────────────────
@@ -1014,9 +1015,18 @@ async function saveSal(role){
     const gst=p.gst||0;
     const taxable=gst>0?+(lineTotal/(1+gst)).toFixed(2):lineTotal;
     const cgstAmt=+(taxable*gst/2).toFixed(2);
-    rows.push({date,saleType:type,party,payMode:pay.payMode,cashAmt:pay.cashAmt,upiAmt:pay.upiAmt,creditAmt:pay.creditAmt,prod:p.id,name:p.name,cat:p.cat,hsn:p.hsn,qty,unit:p.unit,mrp:p.mrp,rate,gst,taxable,cgstAmt,sgstAmt:cgstAmt,lineTotal,createdBy:role});
+    const cAmt=pay.cashAmt===-1?(pay.payMode==="cash"?lineTotal:0):pay.cashAmt;
+    const uAmt=pay.upiAmt===-1?(pay.payMode==="upi"?lineTotal:0):pay.upiAmt;
+    const crAmt=pay.creditAmt===-1?(pay.payMode==="credit"?lineTotal:0):pay.creditAmt;
+    rows.push({date,saleType:type,party,payMode:pay.payMode,cashAmt:cAmt,upiAmt:uAmt,creditAmt:crAmt,prod:p.id,name:p.name,cat:p.cat,hsn:p.hsn,qty,unit:p.unit,mrp:p.mrp,rate,gst,taxable,cgstAmt,sgstAmt:cgstAmt,lineTotal,createdBy:role});
   });
-  document.querySelectorAll(`[id^="${pfx}m-mrow-"]`).forEach(row=>{ const id=row.dataset.id,nm=document.getElementById(`${pfx}m-mn-${id}`)?.value.trim(),qty=parseFloat(document.getElementById(`${pfx}m-mq-${id}`)?.value)||0,rate=parseFloat(document.getElementById(`${pfx}m-mr-${id}`)?.value)||0,unit=document.getElementById(`${pfx}m-mu-${id}`)?.value||"NOS"; if(nm&&qty&&rate) rows.push({date,saleType:type,party,payMode:pay.payMode,cashAmt:0,upiAmt:0,creditAmt:0,prod:"__manual__",name:nm,cat:"",hsn:"",qty,unit,mrp:0,rate,gst:0,taxable:qty*rate,cgstAmt:0,sgstAmt:0,lineTotal:+(qty*rate).toFixed(2),createdBy:role}); });
+  document.querySelectorAll(`[id^="${pfx}m-mrow-"]`).forEach(row=>{ const id=row.dataset.id,nm=document.getElementById(`${pfx}m-mn-${id}`)?.value.trim(),qty=parseFloat(document.getElementById(`${pfx}m-mq-${id}`)?.value)||0,rate=parseFloat(document.getElementById(`${pfx}m-mr-${id}`)?.value)||0,unit=document.getElementById(`${pfx}m-mu-${id}`)?.value||"NOS"; if(nm&&qty&&rate){
+    const mlt=+(qty*rate).toFixed(2);
+    const mcAmt=pay.payMode==="cash"?mlt:pay.payMode==="mix"?pay.cashAmt:0;
+    const muAmt=pay.payMode==="upi"?mlt:pay.payMode==="mix"?pay.upiAmt:0;
+    const mcrAmt=pay.payMode==="credit"?mlt:pay.payMode==="mix"?pay.creditAmt:0;
+    rows.push({date,saleType:type,party,payMode:pay.payMode,cashAmt:mcAmt,upiAmt:muAmt,creditAmt:mcrAmt,prod:"__manual__",name:nm,cat:"",hsn:"",qty,unit,mrp:0,rate,gst:0,taxable:mlt,cgstAmt:0,sgstAmt:0,lineTotal:mlt,createdBy:role});
+  } });
   if(errs.length){ toast("⚠ "+errs.slice(0,2).join(" | "),"err"); return; }
   if(!rows.length){ toast("Select at least one item","err"); return; }
   setBusy(pfx+"-btn",true);
