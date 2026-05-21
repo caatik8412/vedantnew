@@ -621,7 +621,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzGAY1RiBSBZ7JNNLxVCfbsa7f3QF2S1Tc4H-9Dd36H1ZBjc1aBww1Mn0RzuKQILJGYZQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxdTgwn4Vp9NrdnWscmOJ2bvh19s52CFar6gbIWSWOE3VfieFd3llsMn2YDbwUpeW9HXQ/exec";
 
 // ── STATE ─────────────────────────────────────────────────────
 let PRODUCTS=[], PM={}, CUSTOMERS=[], SETTINGS={};
@@ -645,22 +645,46 @@ async function apiGet(action){
   return d;
 }
 async function apiPost(action,data,id=""){
+  // Apps Script POST redirect problem:
+  // When fetch follows redirect, POST body is lost (becomes GET).
+  // Solution: send data as URL param (GET) for writes.
+  // For large data (purchase/sale items), chunk via GET with encoded JSON.
   const payload={action};
   if(data) payload.data=data;
   if(id)   payload.id=id;
-  // Apps Script POST with text/plain — no CORS preflight, follows redirects
-  const r=await fetch(API_URL,{
-    method:"POST",
-    headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify(payload),
-    redirect:"follow"
-  });
-  const text=await r.text();
-  let d;
-  try{ d=JSON.parse(text); }
-  catch(e){ throw new Error("Server response error: "+text.substring(0,100)); }
-  if(d.error) throw new Error(d.error);
-  return d;
+  const encoded=encodeURIComponent(JSON.stringify(payload));
+  // If small enough, use GET directly
+  if(encoded.length<6000){
+    const r=await fetch(API_URL+"?payload="+encoded);
+    const text=await r.text();
+    let d;
+    try{ d=JSON.parse(text); }
+    catch(e){ throw new Error("Parse error: "+text.substring(0,120)); }
+    if(d.error) throw new Error(d.error);
+    return d;
+  }
+  // For large payloads — POST with no-redirect (manual redirect follow)
+  let url=API_URL;
+  for(let i=0;i<3;i++){
+    const r=await fetch(url,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(payload),
+      redirect:"manual"
+    });
+    if(r.type==="opaqueredirect"||r.status===302||r.status===301){
+      // Follow redirect as POST
+      url=r.headers.get("location")||url;
+      continue;
+    }
+    const text=await r.text();
+    let d;
+    try{ d=JSON.parse(text); }
+    catch(e){ throw new Error("Parse error: "+text.substring(0,120)); }
+    if(d.error) throw new Error(d.error);
+    return d;
+  }
+  throw new Error("Too many redirects");
 }
 
 // ── SYNC ──────────────────────────────────────────────────────
@@ -1255,6 +1279,13 @@ function setRptPeriod(p){
   rptPeriod_=p;
   ["today","week","month","custom"].forEach(x=>{ const el=document.getElementById("rp-"+x); if(el){ el.classList.toggle("on",x===p); el.classList.toggle("retail",x===p); } });
   const cb=document.getElementById("rp-custom-box"); if(cb) cb.style.display=p==="custom"?"block":"none";
+  if(p==="custom"){
+    // Set default from/to to current month if blank
+    const t=today();
+    const fromEl=document.getElementById("rpt-from"), toEl=document.getElementById("rpt-to");
+    if(fromEl&&!fromEl.value) fromEl.value=t.substring(0,7)+"-01";
+    if(toEl&&!toEl.value)     toEl.value=t;
+  }
   renderReports();
 }
 function getRptRange(){
