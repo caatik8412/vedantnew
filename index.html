@@ -35,6 +35,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
 
 /* LOGIN */
 #scr-login{background:linear-gradient(160deg,#1e3a8a 0%,#1e40af 60%,#1d4ed8 100%);align-items:center;justify-content:center;padding:28px 24px}
+#scr-setup{background:linear-gradient(160deg,#064e3b 0%,#065f46 60%,#047857 100%);align-items:center;justify-content:center;padding:28px 24px;display:none;flex-direction:column}
+.setup-card{background:var(--white);border-radius:20px;padding:28px 24px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.setup-badge{background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;text-align:center;margin-bottom:12px;display:inline-block}
+.setup-field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.setup-field label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.setup-field input{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;color:var(--text);background:var(--bg);letter-spacing:2px}
+.setup-field input:focus{outline:none;border-color:#059669}
+.setup-err{color:var(--red2);font-size:12px;font-weight:600;text-align:center;min-height:18px;margin-bottom:6px}
 .login-card{background:var(--white);border-radius:20px;padding:28px 24px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
 .login-logo{width:60px;height:60px;background:var(--blue-l);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 12px}
 .login-card h1{font-size:17px;font-weight:800;color:var(--text);text-align:center}
@@ -249,7 +257,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
 <div class="toast" id="toast"></div>
 
 <!-- ══ LOGIN ══ -->
-<div class="scr on" id="scr-login">
+<!-- MASTER PASSWORD GATE -->
+<div id="scr-gate" class="scr">
+<div class="setup-card">
+  <div class="login-logo">🔑</div>
+  <h1 style="font-size:17px;font-weight:800;text-align:center;margin-bottom:4px">🔐 Protected App</h1>
+  <p style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:18px">Enter the access password to install and use this app.</p>
+  <div class="setup-field">
+    <label>Master Password</label>
+    <input type="password" id="gate-pass" placeholder="Enter master password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doGate()">
+  </div>
+  <div class="setup-err" id="gate-err"></div>
+  <button class="btn blue" onclick="doGate()">🔓 Install &amp; Open App</button>
+  <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:12px">Once verified, only your PIN will be needed on this device.</p>
+</div>
+</div>
+
+<div class="scr" id="scr-login">
 <div class="login-card">
   <div class="login-logo">🥛</div>
   <h1 id="shop-login">Vedantlaxmi Enterprises</h1>
@@ -746,6 +770,38 @@ function incNo(v){
   return m ? m[1]+String(parseInt(m[2],10)+1).padStart(3,"0") : v;
 }
 
+// ── SECURITY GATE ─────────────────────────────────────────────
+const _GP = "Atik@2910";
+
+function initSecurity(){
+  const unlocked=localStorage.getItem("vle_unlocked");
+  if(unlocked==="1"){
+    showRaw("scr-login");
+  } else {
+    showRaw("scr-gate");
+  }
+}
+
+function showRaw(id){
+  ["scr-setup","scr-gate","scr-login","scr-staff","scr-owner"].forEach(s=>{
+    const el=document.getElementById(s);
+    if(el){ el.style.display=s===id?"flex":"none"; }
+  });
+}
+
+function doGate(){
+  const p=document.getElementById("gate-pass").value;
+  const err=document.getElementById("gate-err");
+  if(p===_GP){
+    localStorage.setItem("vle_unlocked","1");
+    err.textContent="";
+    showRaw("scr-login");
+  } else {
+    err.textContent="Wrong password. Try again.";
+    document.getElementById("gate-pass").value="";
+  }
+}
+
 // ── LOGIN ─────────────────────────────────────────────────────
 function selRole(r){
   selectedRole=r;
@@ -775,10 +831,20 @@ function checkPin(){
     pinEntry=""; updDots();
   }
 }
-function logout(){ pinEntry=""; updDots(); show("scr-login"); }
+function logout(){ pinEntry=""; updDots(); showRaw("scr-login"); }
 
 // ── SCREEN / NAV ──────────────────────────────────────────────
-function show(id){ document.querySelectorAll(".scr").forEach(s=>s.classList.remove("on")); document.getElementById(id).classList.add("on"); }
+function show(id){
+  // Hide all screens (both display-based and class-based)
+  document.querySelectorAll(".scr").forEach(s=>{ s.classList.remove("on"); s.style.display="none"; });
+  const el=document.getElementById(id);
+  if(el){ el.style.display="flex"; el.classList.add("on"); }
+}
+function showRaw(id){
+  document.querySelectorAll(".scr").forEach(s=>{ s.classList.remove("on"); s.style.display="none"; });
+  const el=document.getElementById(id);
+  if(el){ el.style.display="flex"; el.classList.add("on"); }
+}
 function staffNav(t){
   ["pur","sal","stk"].forEach(x=>{ document.getElementById("sv-"+x).classList.toggle("on",x===t); document.getElementById("sn-"+x).classList.toggle("on",x===t); });
   if(t==="stk") renderStk();
@@ -1358,6 +1424,8 @@ function setBusy(id,busy){
   ["pur-sup","opur-sup"].forEach(id=>{const el=document.getElementById(id);if(el) el.value="Gokul — Kolhapur Zilla Sahakari";});
   buildPayOptions("sal","retail");
   buildPayOptions("osal","retail");
+  // Security gate — must run after DOM ready
+  initSecurity();
   // Auto-refresh every 10 minutes (silent, no disruption)
   setInterval(()=>{ if(!_syncing&&(document.getElementById("scr-staff").classList.contains("on")||document.getElementById("scr-owner").classList.contains("on"))) syncData(); }, 600000);
 })();
