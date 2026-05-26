@@ -253,11 +253,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
 </head>
 <body>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ══ LOGIN ══ -->
-<!-- MASTER PASSWORD GATE -->
 <div id="scr-gate" class="scr">
 <div class="setup-card">
   <div class="login-logo">🔑</div>
@@ -309,7 +306,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
 </div>
 </div>
 
-<!-- ══ STAFF ══ -->
 <div class="scr" id="scr-staff">
   <div class="hdr">
     <div class="hdr-logo">🥛</div>
@@ -325,7 +321,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
     </div>
   </div>
 
-  <!-- PURCHASE -->
   <div class="view on" id="sv-pur">
     <div class="scroll">
       <div class="card">
@@ -348,7 +343,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
     </div>
   </div>
 
-  <!-- SALES -->
   <div class="view" id="sv-sal">
     <div class="scroll">
       <div class="card">
@@ -388,7 +382,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
     </div>
   </div>
 
-  <!-- STOCK (staff) -->
   <div class="view" id="sv-stk">
     <div class="scroll">
       <div class="card-hd" style="padding:4px 0 10px">Current Stock</div>
@@ -412,7 +405,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
   </nav>
 </div>
 
-<!-- ══ OWNER ══ -->
 <div class="scr" id="scr-owner">
   <div class="hdr">
     <div class="hdr-logo">🥛</div>
@@ -428,7 +420,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
     </div>
   </div>
 
-  <!-- INVENTORY -->
   <div class="view on" id="ov-inv">
     <div class="scroll">
       <div class="chips" id="inv-chips"></div>
@@ -446,7 +437,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
     </div>
   </div>
 
-  <!-- PURCHASES (owner) -->
   <div class="view" id="ov-pur">
     <div class="stabs">
       <div class="stab on" id="opt-pa" onclick="oSub('p','a')">➕ Add</div>
@@ -486,7 +476,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
     </div>
   </div>
 
-  <!-- SALES (owner) -->
   <div class="view" id="ov-sal">
     <div class="stabs">
       <div class="stab on" id="opt-sa" onclick="oSub('s','a')">➕ Add</div>
@@ -548,7 +537,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
     </div>
   </div>
 
-  <!-- LEDGER -->
   <div class="view" id="ov-led">
     <div class="stabs">
       <div class="stab on" id="opt-ll" onclick="oSub('l','l')">📊 Ledger</div>
@@ -594,7 +582,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
     </div>
   </div>
 
-  <!-- REPORTS -->
   <div class="view" id="ov-rpt">
     <div class="scroll">
       <div class="card" style="margin-bottom:12px">
@@ -650,9 +637,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:va
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxdTgwn4Vp9NrdnWscmOJ2bvh19s52CFar6gbIWSWOE3VfieFd3llsMn2YDbwUpeW9HXQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyLlTusy_n74Oc2prJ7RV0ihUCo8uO4a6XfcPlrj3OG6YxTI1OXUApqL_eM6s59a41-vg/exec";
 
-// ── STATE ─────────────────────────────────────────────────────
+// ─── STATE ─────────────────────────────────────────────────────
 let PRODUCTS=[], PM={}, CUSTOMERS=[], SETTINGS={};
 let purchases=[], sales=[], receipts=[];
 let nextPurNo="VLE Gokul Purchase-001", nextSalNo="VLE Sale-001", nextRecNo="REC-001";
@@ -666,7 +653,7 @@ let _syncing=false;
 const CAT_ORDER=["Milk","Dahi","Buttermilk","Lassi","Paneer","Shrikhand","Flavoured Milk","Cheese","Butter","Ghee","Basundi"];
 const CAT_COLORS={Milk:"#2563eb",Dahi:"#059669",Buttermilk:"#0e7490",Lassi:"#0284c7",Paneer:"#7c3aed",Shrikhand:"#d97706",Basundi:"#b45309",Butter:"#d97706",Ghee:"#f59e0b",Cheese:"#65a30d","Flavoured Milk":"#db2777"};
 
-// ── API ───────────────────────────────────────────────────────
+// ─── API ───────────────────────────────────────────────────────
 async function apiGet(action){
   const r=await fetch(API_URL+"?action="+action);
   const d=await r.json();
@@ -674,15 +661,10 @@ async function apiGet(action){
   return d;
 }
 async function apiPost(action,data,id=""){
-  // Apps Script POST redirect problem:
-  // When fetch follows redirect, POST body is lost (becomes GET).
-  // Solution: send data as URL param (GET) for writes.
-  // For large data (purchase/sale items), chunk via GET with encoded JSON.
   const payload={action};
   if(data) payload.data=data;
   if(id)   payload.id=id;
   const encoded=encodeURIComponent(JSON.stringify(payload));
-  // If small enough, use GET directly
   if(encoded.length<6000){
     const r=await fetch(API_URL+"?payload="+encoded);
     const text=await r.text();
@@ -692,7 +674,6 @@ async function apiPost(action,data,id=""){
     if(d.error) throw new Error(d.error);
     return d;
   }
-  // For large payloads — POST with no-redirect (manual redirect follow)
   let url=API_URL;
   for(let i=0;i<3;i++){
     const r=await fetch(url,{
@@ -702,7 +683,6 @@ async function apiPost(action,data,id=""){
       redirect:"manual"
     });
     if(r.type==="opaqueredirect"||r.status===302||r.status===301){
-      // Follow redirect as POST
       url=r.headers.get("location")||url;
       continue;
     }
@@ -716,7 +696,7 @@ async function apiPost(action,data,id=""){
   throw new Error("Too many redirects");
 }
 
-// ── SYNC ──────────────────────────────────────────────────────
+// ─── SYNC ──────────────────────────────────────────────────────
 async function syncData(){
   if(_syncing) return;
   _syncing=true;
@@ -770,7 +750,7 @@ function incNo(v){
   return m ? m[1]+String(parseInt(m[2],10)+1).padStart(3,"0") : v;
 }
 
-// ── SECURITY GATE ─────────────────────────────────────────────
+// ─── SECURITY GATE ─────────────────────────────────────────────
 const _GP = "Atik@2910";
 
 function initSecurity(){
@@ -802,7 +782,7 @@ function doGate(){
   }
 }
 
-// ── LOGIN ─────────────────────────────────────────────────────
+// ─── LOGIN ─────────────────────────────────────────────────────
 function selRole(r){
   selectedRole=r;
   document.getElementById("rb-staff").classList.toggle("sel",r==="staff");
@@ -833,14 +813,8 @@ function checkPin(){
 }
 function logout(){ pinEntry=""; updDots(); showRaw("scr-login"); }
 
-// ── SCREEN / NAV ──────────────────────────────────────────────
+// ─── SCREEN / NAV ──────────────────────────────────────────────
 function show(id){
-  // Hide all screens (both display-based and class-based)
-  document.querySelectorAll(".scr").forEach(s=>{ s.classList.remove("on"); s.style.display="none"; });
-  const el=document.getElementById(id);
-  if(el){ el.style.display="flex"; el.classList.add("on"); }
-}
-function showRaw(id){
   document.querySelectorAll(".scr").forEach(s=>{ s.classList.remove("on"); s.style.display="none"; });
   const el=document.getElementById(id);
   if(el){ el.style.display="flex"; el.classList.add("on"); }
@@ -866,7 +840,7 @@ function oSub(prefix,pane){
   });
 }
 
-// ── CONN ──────────────────────────────────────────────────────
+// ─── CONN ──────────────────────────────────────────────────────
 function setConn(s){
   ["staff","owner"].forEach(r=>{
     const dot=document.getElementById("cdot-"+r);
@@ -876,7 +850,7 @@ function setConn(s){
   });
 }
 
-// ── GRIDS ─────────────────────────────────────────────────────
+// ─── GRIDS ─────────────────────────────────────────────────────
 function buildGrids(){
   buildPurGrid("pur-grid","pur");
   buildPurGrid("opur-grid","opur");
@@ -923,7 +897,7 @@ function buildSalGrid(cid,pfx){
   updSalRates(pfx,sType[pfx==="sal"?"s":"o"]);
 }
 
-// ── PURCHASE INPUT ────────────────────────────────────────────
+// ─── PURCHASE INPUT ────────────────────────────────────────────
 function onPQ(pfx,pid){
   const qty=parseFloat(document.getElementById(`${pfx}-q-${pid}`)?.value)||0;
   const row=document.getElementById(`${pfx}-row-${pid}`);
@@ -939,7 +913,7 @@ function recalcPur(pfx){
   const el=document.getElementById(pfx==="pur"?"pur-tot":"opur-tot"); if(el) el.textContent=t>0?t+" pcs":"0 pcs";
 }
 
-// ── SALE INPUT ────────────────────────────────────────────────
+// ─── SALE INPUT ────────────────────────────────────────────────
 function setSalType(who,type){
   sType[who]=type;
   const isO=who==="o";
@@ -984,7 +958,7 @@ function recalcSal(pfx){
   const el=document.getElementById(pfx==="sal"?"sal-tot":"osal-tot"); if(el) el.textContent=fmt(t);
 }
 
-// ── PAY TOGGLES ───────────────────────────────────────────────
+// ─── PAY TOGGLES ───────────────────────────────────────────────
 function buildPayOptions(pfx,saltype){
   const wrap=document.getElementById(pfx+"-pay"); if(!wrap) return;
   const who=pfx==="sal"?"s":"o";
@@ -1014,11 +988,10 @@ function calcMix(pfx){
 function getPayInfo(pfx){
   const who=pfx==="sal"?"s":"o", type=sPay[who];
   if(type==="mix") return{payMode:"mix",cashAmt:parseFloat(document.getElementById(pfx+"-mc")?.value)||0,upiAmt:parseFloat(document.getElementById(pfx+"-mu")?.value)||0,creditAmt:parseFloat(document.getElementById(pfx+"-mcr")?.value)||0};
-  // For single mode — amounts will be set per line item based on lineTotal
-  return{payMode:type,cashAmt:-1,upiAmt:-1,creditAmt:-1}; // -1 = use lineTotal
+  return{payMode:type,cashAmt:-1,upiAmt:-1,creditAmt:-1};
 }
 
-// ── MANUAL ROWS ───────────────────────────────────────────────
+// ─── MANUAL ROWS ───────────────────────────────────────────────
 const UNITS=["NOS","KGS","LTR","PKT","BOX"];
 function addMRow(pfx){
   manIdx++;
@@ -1034,7 +1007,7 @@ function addMRow(pfx){
   document.getElementById(pfx+"-rows").appendChild(div);
 }
 
-// ── SAVE PURCHASE ─────────────────────────────────────────────
+// ─── SAVE PURCHASE ─────────────────────────────────────────────
 async function savePur(role){
   const pfx=role==="staff"?"pur":"opur";
   const date=document.getElementById(pfx+"-date")?.value;
@@ -1047,7 +1020,6 @@ async function savePur(role){
   setBusy(pfx+"-btn",true);
   try{
     const r=await apiPost("addPurchase",{date,supplier:sup,items,createdBy:role});
-    // r may come back as success:true with invNo, or just success:true
     const invNo=(r&&r.invNo)?r.invNo:nextPurNo;
     const rid=(r&&r.id)?r.id:"";
     purchases.push({"Invoice No":invNo,Date:date,Supplier:sup,"Items JSON":JSON.stringify(items),"Total Qty":items.reduce((s,i)=>s+i.qty,0),id:rid});
@@ -1065,7 +1037,7 @@ function clearPur(pfx){
   const t=document.getElementById(pfx==="pur"?"pur-tot":"opur-tot"); if(t) t.textContent="0 pcs";
 }
 
-// ── SAVE SALE ─────────────────────────────────────────────────
+// ─── SAVE SALE ─────────────────────────────────────────────────
 async function saveSal(role){
   const pfx=role==="staff"?"sal":"osal", who=role==="staff"?"s":"o";
   const type=sType[who];
@@ -1073,58 +1045,115 @@ async function saveSal(role){
   if(type==="wholesale"&&!party){ toast("Select a wholesaler","err"); return; }
   const date=document.getElementById(pfx+"-date")?.value;
   if(!date){ toast("Select a date","err"); return; }
-  const pay=getPayInfo(pfx);
-  const rows=[],errs=[],missingRate=[];
-  PRODUCTS.forEach(p=>{
-    const qty=parseFloat(document.getElementById(`${pfx}-q-${p.id}`)?.value)||0;
-    const rate=parseFloat(document.getElementById(`${pfx}-r-${p.id}`)?.value)||0;
-    if(!qty) return;
-    if(!rate){ missingRate.push({pid:p.id,name:p.name}); return; }
-    const stk=getStock(p.id);
-    if(qty>stk){ errs.push(`${p.name}: need ${qty}, only ${stk} available`); return; }
-    const lineTotal=+(qty*rate).toFixed(2);
-    const gst=p.gst||0;
-    const taxable=gst>0?+(lineTotal/(1+gst)).toFixed(2):lineTotal;
-    const cgstAmt=+(taxable*gst/2).toFixed(2);
-    const cAmt=pay.cashAmt===-1?(pay.payMode==="cash"?lineTotal:0):pay.cashAmt;
-    const uAmt=pay.upiAmt===-1?(pay.payMode==="upi"?lineTotal:0):pay.upiAmt;
-    const crAmt=pay.creditAmt===-1?(pay.payMode==="credit"?lineTotal:0):pay.creditAmt;
-    rows.push({date,saleType:type,party,payMode:pay.payMode,cashAmt:cAmt,upiAmt:uAmt,creditAmt:crAmt,prod:p.id,name:p.name,cat:p.cat,hsn:p.hsn,qty,unit:p.unit,mrp:p.mrp,rate,gst,taxable,cgstAmt,sgstAmt:cgstAmt,lineTotal,createdBy:role});
+  const pay = getPayInfo(pfx);
+  const tempRows = [], missingRate = [], errs = [];
+  let calculatedInvoiceTotal = 0;
+
+  PRODUCTS.forEach(p => {
+    const qty = parseFloat(document.getElementById(`${pfx}-q-${p.id}`)?.value) || 0;
+    const rate = parseFloat(document.getElementById(`${pfx}-r-${p.id}`)?.value) || 0;
+    if (!qty) return;
+    if (!rate) { missingRate.push({ pid: p.id, name: p.name }); return; }
+    const stk = getStock(p.id);
+    if (qty > stk) { errs.push(`${p.name}: need ${qty}, only ${stk} available`); return; }
+    
+    const lineTotal = +(qty * rate).toFixed(2);
+    calculatedInvoiceTotal += lineTotal;
+    
+    tempRows.push({
+      prod: p.id, name: p.name, cat: p.cat, hsn: p.hsn, qty, unit: p.unit, mrp: p.mrp, rate, gst: p.gst || 0, lineTotal, isManual: false
+    });
   });
-  // Block save if any item has qty but no rate
-  if(missingRate.length){
-    const names=missingRate.map(x=>x.name.split(" ").slice(0,3).join(" ")).join(", ");
-    const choice=confirm(`These items have qty but no rate:\n${names}\n\nPress OK to clear their qty and continue.\nPress Cancel to go back and enter rates.`);
-    if(!choice) return; // go back
-    // Clear qty for items with missing rate
-    missingRate.forEach(x=>{
-      const qi=document.getElementById(`${pfx}-q-${x.pid}`); if(qi) qi.value="";
-      const ai=document.getElementById(`${pfx}-a-${x.pid}`); if(ai) ai.textContent="";
-      const ri=document.getElementById(`${pfx}-row-${x.pid}`); if(ri) ri.classList.remove("has");
+
+  if (missingRate.length) {
+    const names = missingRate.map(x => x.name.split(" ").slice(0, 3).join(" ")).join(", ");
+    const choice = confirm(`These items have qty but no rate:\n${names}\n\nPress OK to clear their qty and continue.\nPress Cancel to go back and enter rates.`);
+    if (!choice) return;
+    missingRate.forEach(x => {
+      const qi = document.getElementById(`${pfx}-q-${x.pid}`); if (qi) qi.value = "";
+      const ai = document.getElementById(`${pfx}-a-${x.pid}`); if (ai) ai.textContent = "";
+      const ri = document.getElementById(`${pfx}-row-${x.pid}`); if (ri) ri.classList.remove("has");
     });
     recalcSal(pfx);
-    if(!rows.length){ toast("No items left to save","err"); return; }
+    if (!tempRows.length) { toast("No items left to save", "err"); return; }
   }
-  document.querySelectorAll(`[id^="${pfx}m-mrow-"]`).forEach(row=>{ const id=row.dataset.id,nm=document.getElementById(`${pfx}m-mn-${id}`)?.value.trim(),qty=parseFloat(document.getElementById(`${pfx}m-mq-${id}`)?.value)||0,rate=parseFloat(document.getElementById(`${pfx}m-mr-${id}`)?.value)||0,unit=document.getElementById(`${pfx}m-mu-${id}`)?.value||"NOS"; if(nm&&qty&&rate){
-    const mlt=+(qty*rate).toFixed(2);
-    const mcAmt=pay.payMode==="cash"?mlt:pay.payMode==="mix"?pay.cashAmt:0;
-    const muAmt=pay.payMode==="upi"?mlt:pay.payMode==="mix"?pay.upiAmt:0;
-    const mcrAmt=pay.payMode==="credit"?mlt:pay.payMode==="mix"?pay.creditAmt:0;
-    rows.push({date,saleType:type,party,payMode:pay.payMode,cashAmt:mcAmt,upiAmt:muAmt,creditAmt:mcrAmt,prod:"__manual__",name:nm,cat:"",hsn:"",qty,unit,mrp:0,rate,gst:0,taxable:mlt,cgstAmt:0,sgstAmt:0,lineTotal:mlt,createdBy:role});
-  } });
-  if(errs.length){ toast("⚠ "+errs.slice(0,2).join(" | "),"err"); return; }
-  if(!rows.length){ toast("Select at least one item","err"); return; }
-  setBusy(pfx+"-btn",true);
-  try{
-    const r=await apiPost("addSales",rows);
-    const invNo=(r&&r.invNo)?r.invNo:nextSalNo;
-    rows.forEach(row=>{ row.invNo=invNo; sales.push(row); });
-    nextSalNo=incNo(invNo);
-    ["sal-inv","osal-inv"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=nextSalNo; });
+
+  document.querySelectorAll(`[id^="${pfx}m-mrow-"]`).forEach(row => {
+    const id = row.dataset.id;
+    const nm = document.getElementById(`${pfx}m-mn-${id}`)?.value.trim();
+    const qty = parseFloat(document.getElementById(`${pfx}m-mq-${id}`)?.value) || 0;
+    const rate = parseFloat(document.getElementById(`${pfx}m-mr-${id}`)?.value) || 0;
+    const unit = document.getElementById(`${pfx}m-mu-${id}`)?.value || "NOS";
+    if (nm && qty && rate) {
+      const mlt = +(qty * rate).toFixed(2);
+      calculatedInvoiceTotal += mlt;
+      tempRows.push({
+        prod: "__manual__", name: nm, cat: "", hsn: "", qty, unit, mrp: 0, rate, gst: 0, lineTotal: mlt, isManual: true
+      });
+    }
+  });
+
+  if (errs.length) { toast("⚠ " + errs.slice(0, 2).join(" | "), "err"); return; }
+  if (!tempRows.length) { toast("Select at least one item", "err"); return; }
+
+  if (pay.payMode === "mix") {
+    const totalInputMix = +(pay.cashAmt + pay.upiAmt + pay.creditAmt).toFixed(2);
+    if (Math.abs(totalInputMix - parseFloat(calculatedInvoiceTotal.toFixed(2))) > 0.1) {
+      toast(`Mix Total (${totalInputMix}) must equal Invoice Total (${calculatedInvoiceTotal.toFixed(2)})`, "err");
+      return;
+    }
+  }
+
+  const rows = [];
+  tempRows.forEach((item, index) => {
+    const taxable = item.gst > 0 ? +(item.lineTotal / (1 + item.gst)).toFixed(2) : item.lineTotal;
+    const cgstAmt = +(taxable * item.gst / 2).toFixed(2);
+    
+    let cAmt = 0, uAmt = 0, crAmt = 0;
+
+    if (pay.payMode === "mix") {
+      if (calculatedInvoiceTotal > 0) {
+        const ratio = item.lineTotal / calculatedInvoiceTotal;
+        if (index === tempRows.length - 1) {
+          const processedCash = rows.reduce((sum, r) => sum + r.cashAmt, 0);
+          const processedUpi = rows.reduce((sum, r) => sum + r.upiAmt, 0);
+          const processedCredit = rows.reduce((sum, r) => sum + r.creditAmt, 0);
+          cAmt = +(pay.cashAmt - processedCash).toFixed(2);
+          uAmt = +(pay.upiAmt - processedUpi).toFixed(2);
+          crAmt = +(pay.creditAmt - processedCredit).toFixed(2);
+        } else {
+          cAmt = +(pay.cashAmt * ratio).toFixed(2);
+          uAmt = +(pay.upiAmt * ratio).toFixed(2);
+          crAmt = +(pay.creditAmt * ratio).toFixed(2);
+        }
+      }
+    } else {
+      cAmt = pay.payMode === "cash" ? item.lineTotal : 0;
+      uAmt = pay.payMode === "upi" ? item.lineTotal : 0;
+      crAmt = pay.payMode === "credit" ? item.lineTotal : 0;
+    }
+
+    rows.push({
+      date, saleType: type, party, payMode: pay.payMode,
+      cashAmt: cAmt, upiAmt: uAmt, creditAmt: crAmt,
+      prod: item.prod, name: item.name, cat: item.cat, hsn: item.hsn,
+      qty: item.qty, unit: item.unit, mrp: item.mrp, rate: item.rate,
+      gst: item.gst, taxable, cgstAmt, sgstAmt: cgstAmt,
+      lineTotal: item.lineTotal, createdBy: role
+    });
+  });
+
+  setBusy(pfx + "-btn", true);
+  try {
+    const r = await apiPost("addSales", rows);
+    const invNo = (r && r.invNo) ? r.invNo : nextSalNo;
+    rows.forEach(row => { row.invNo = invNo; sales.push(row); });
+    nextSalNo = incNo(invNo);
+    ["sal-inv", "osal-inv"].forEach(id => { const el = document.getElementById(id); if (el) el.value = nextSalNo; });
     clearSal(pfx); renderInv(); renderSalRec(); renderLed();
-    toast(`✓ ${invNo} — ${rows.length} item(s)`,"ok");
-  }catch(e){ toast("Save failed: "+e.message,"err"); }
-  setBusy(pfx+"-btn",false);
+    toast(`✓ ${invNo} — ${rows.length} item(s)`, "ok");
+  } catch (e) { toast("Save failed: " + e.message, "err"); }
+  setBusy(pfx + "-btn", false);
 }
 
 function clearSal(pfx){
@@ -1135,7 +1164,7 @@ function clearSal(pfx){
   updSalRates(pfx,sType[who]);
 }
 
-// ── RECEIPT ───────────────────────────────────────────────────
+// ─── RECEIPT ───────────────────────────────────────────────────
 function setRecPay(t){ recPayType=t; ["cash","upi"].forEach(x=>document.getElementById("rp-"+x)?.classList.toggle("on",x===t)); }
 
 function showOutstanding(){
@@ -1174,7 +1203,7 @@ async function saveReceipt(){
   setBusy("rec-btn",false);
 }
 
-// ── STOCK CALC ────────────────────────────────────────────────
+// ─── STOCK CALC ────────────────────────────────────────────────
 function getStock(pid){
   let bought=0;
   purchases.forEach(pur=>{ let items=[]; try{items=JSON.parse(pur["Items JSON"]||"[]");}catch(e){} items.forEach(i=>{ if(i.prod===pid) bought+=parseFloat(i.qty)||0; }); });
@@ -1184,10 +1213,10 @@ function getStock(pid){
 function getBought(pid){ let b=0; purchases.forEach(pur=>{ let items=[]; try{items=JSON.parse(pur["Items JSON"]||"[]");}catch(e){} items.forEach(i=>{ if(i.prod===pid) b+=parseFloat(i.qty)||0; }); }); return b; }
 function getManualStock(){ const m={}; purchases.forEach(pur=>{ let items=[]; try{items=JSON.parse(pur["Items JSON"]||"[]");}catch(e){} items.forEach(i=>{ if(i.prod==="__manual__"){ const k=i.name+"||"+(i.unit||"NOS"); m[k]=(m[k]||0)+parseFloat(i.qty||0); } }); }); sales.forEach(r=>{ if((r.prod||r["Prod ID"])==="__manual__"){ const k=(r.name||r["Product Name"])+"||"+(r.unit||r.Unit||"NOS"); m[k]=(m[k]||0)-parseFloat(r.qty||r.Qty||0); } }); return m; }
 
-// ── RENDER ALL ────────────────────────────────────────────────
+// ─── RENDER ALL ────────────────────────────────────────────────
 function renderAll(){ renderInv(); renderPurRec(); renderSalRec(); renderLed(); renderRecRecs(); renderStk(); }
 
-// ── INVENTORY ─────────────────────────────────────────────────
+// ─── INVENTORY ─────────────────────────────────────────────────
 function renderInv(){
   const totS=sales.reduce((s,r)=>s+(parseFloat(r.lineTotal||r["Line Total"]||r.amount)||0),0);
   const stkV=PRODUCTS.reduce((s,p)=>s+getStock(p.id)*(p.pp||p.mrp||0),0);
@@ -1232,13 +1261,12 @@ function renderInvList(filter){
       </div>
     </div>`;
   });
-  // Manual items
   const man=getManualStock(); const me=Object.entries(man).filter(([_,q])=>q>0);
   if(me.length&&filter==="all"){ h+=`<div class="cat-sep">Unlisted Items</div>`; me.forEach(([k,q])=>{ const[n,u]=k.split("||"); h+=`<div class="inv-item"><div class="inv-stripe" style="background:var(--muted)"></div><div class="inv-info"><div class="inv-name">${n}</div><div class="inv-detail">Manual</div></div><div class="inv-stock"><div class="inv-num ok">${q}</div><div class="inv-unit">${u}</div></div></div>`; }); }
   list.innerHTML=h;
 }
 
-// ── STOCK VIEW (staff) ────────────────────────────────────────
+// ─── STOCK VIEW (staff) ────────────────────────────────────────
 function renderStk(){
   const list=document.getElementById("stk-list"); if(!list) return;
   let h="",lc="";
@@ -1252,7 +1280,7 @@ function renderStk(){
   list.innerHTML=h||'<div class="empty"><div class="ei">📦</div>No data</div>';
 }
 
-// ── PURCHASE RECORDS ──────────────────────────────────────────
+// ─── PURCHASE RECORDS ──────────────────────────────────────────
 function renderPurRec(){
   const tq=purchases.reduce((s,p)=>s+(p["Total Qty"]||0),0);
   document.getElementById("pur-chips").innerHTML=`<div class="chip"><div class="cl">Invoices</div><div class="cv blue">${purchases.length}</div></div><div class="chip"><div class="cl">Total Qty In</div><div class="cv green">${tq} pcs</div></div>`;
@@ -1270,7 +1298,7 @@ function renderPurRec(){
 }
 async function delPur(id,idx){ if(!confirm("Delete?")) return; try{ if(id) await apiPost("delPurchase","",id); purchases.splice(idx,1); renderPurRec(); renderInv(); toast("Deleted",""); }catch(e){ toast("Delete failed","err"); } }
 
-// ── SALES RECORDS (invoice grouped) ──────────────────────────
+// ─── SALES RECORDS (invoice grouped) ──────────────────────────
 function renderSalRec(){
   const totR=sales.filter(r=>(r.saleType||r["Sale Type"])==="retail").reduce((s,r)=>s+(parseFloat(r.lineTotal||r["Line Total"]||r.amount)||0),0);
   const totW=sales.filter(r=>(r.saleType||r["Sale Type"])==="wholesale").reduce((s,r)=>s+(parseFloat(r.lineTotal||r["Line Total"]||r.amount)||0),0);
@@ -1281,7 +1309,6 @@ function renderSalRec(){
   if(to)   filtered=filtered.filter(r=>String(r.date||r.Date)<=to);
   const recs=document.getElementById("sal-recs");
   if(!filtered.length){ recs.innerHTML='<div class="empty"><div class="ei">📄</div>No sales yet</div>'; return; }
-  // Group by invoice
   const invMap={};
   filtered.forEach(r=>{ const inv=r.invNo||r["Invoice No"]||"—"; if(!invMap[inv]) invMap[inv]={inv,date:r.date||r.Date||"",type:r.saleType||r["Sale Type"]||"",party:r.party||r.Party||"—",pay:r.payMode||r["Payment Mode"]||"",items:[],total:0,qty:0}; invMap[inv].items.push(r); invMap[inv].total+=parseFloat(r.lineTotal||r["Line Total"]||r.amount)||0; invMap[inv].qty+=parseFloat(r.qty||r.Qty)||0; });
   const invs=Object.values(invMap).sort((a,b)=>b.date.localeCompare(a.date)||b.inv.localeCompare(a.inv));
@@ -1296,7 +1323,7 @@ function toggleSalInv(inv){ salInvOpen=salInvOpen===inv?"":inv; renderSalRec(); 
 async function delInvoice(invNo){ if(!confirm("Delete invoice "+invNo+"?")) return; const toDelete=sales.filter(r=>(r.invNo||r["Invoice No"])===invNo); try{ for(const r of toDelete) if(r.id||r.ID) await apiPost("delSale","",r.id||r.ID); sales=sales.filter(r=>(r.invNo||r["Invoice No"])!==invNo); renderSalRec(); renderInv(); renderLed(); toast("Invoice deleted","ok"); }catch(e){ toast("Delete failed","err"); } }
 function salFilter(type,el){ salFilter_=type; document.querySelectorAll("#osp-sr .ftab").forEach(t=>t.classList.remove("on")); el.classList.add("on"); renderSalRec(); }
 
-// ── LEDGER ────────────────────────────────────────────────────
+// ─── LEDGER ────────────────────────────────────────────────────
 function getLedgerBal(party){
   const cred=sales.filter(r=>(r.party||r.Party)===party).reduce((s,r)=>{ const m=r.payMode||r["Payment Mode"]||"",lt=parseFloat(r.lineTotal||r["Line Total"]||r.amount)||0,ca=parseFloat(r.creditAmt||r["Credit Amt"])||0; return s+(m==="credit"?lt:m==="mix"&&ca>0?ca:0); },0);
   const rcvd=receipts.filter(r=>(r.Party||r.party)===party).reduce((s,r)=>s+(parseFloat(r.Amount||r.amount)||0),0);
@@ -1330,14 +1357,14 @@ function renderLedDetail(party){
   return h;
 }
 
-// ── RECEIPT RECORDS ───────────────────────────────────────────
+// ─── RECEIPT RECORDS ───────────────────────────────────────────
 function renderRecRecs(){
   const w=document.getElementById("rec-recs"); if(!w) return;
   if(!receipts.length){ w.innerHTML='<div class="empty" style="padding:20px"><div class="ei">🧾</div>No receipts</div>'; return; }
   w.innerHTML=[...receipts].sort((a,b)=>String(b.Date||b.date).localeCompare(String(a.Date||a.date))).map(r=>`<div class="rec"><div class="rec-left"><div class="rec-name">${r["Receipt No"]||"—"}</div><div class="rec-sub">${r.Date||r.date||""} · ${r.Party||r.party||"—"}<br>${r["Payment Mode"]||""} ${r.Notes||r.notes?`· ${r.Notes||r.notes}`:""}</div></div><div class="rec-right"><div class="rec-amt" style="color:var(--green2)">${fmt(parseFloat(r.Amount||r.amount)||0)}</div></div></div>`).join("");
 }
 
-// ── REPORTS ───────────────────────────────────────────────────
+// ─── REPORTS ───────────────────────────────────────────────────
 function renderReports(){
   const{from,to,label}=getRptRange();
   const el=document.getElementById("rpt-lbl"); if(el) el.textContent=label;
@@ -1347,9 +1374,9 @@ function renderReports(){
   const totS=ps.reduce((s,r)=>s+(parseFloat(r.lineTotal||r["Line Total"]||r.amount)||0),0);
   const totR=ps.filter(r=>(r.saleType||r["Sale Type"])==="retail").reduce((s,r)=>s+(parseFloat(r.lineTotal||r["Line Total"]||r.amount)||0),0);
   const totW=ps.filter(r=>(r.saleType||r["Sale Type"])==="wholesale").reduce((s,r)=>s+(parseFloat(r.lineTotal||r["Line Total"]||r.amount)||0),0);
-  const totCash=ps.filter(r=>(r.payMode||r["Payment Mode"])==="cash").reduce((s,r)=>s+(parseFloat(r.lineTotal||r["Line Total"]||r.amount)||0),0);
-  const totUPI=ps.filter(r=>(r.payMode||r["Payment Mode"])==="upi").reduce((s,r)=>s+(parseFloat(r.lineTotal||r["Line Total"]||r.amount)||0),0);
-  const totCred=ps.reduce((s,r)=>{ const m=r.payMode||r["Payment Mode"]||"",lt=parseFloat(r.lineTotal||r["Line Total"]||r.amount)||0,ca=parseFloat(r.creditAmt||r["Credit Amt"])||0; return s+(m==="credit"?lt:m==="mix"&&ca>0?ca:0); },0);
+  const totCash=ps.reduce((s,r)=>s+(parseFloat(r.cashAmt||r["Cash Amt"])||0),0);
+  const totUPI=ps.reduce((s,r)=>s+(parseFloat(r.upiAmt||r["UPI Amt"])||0),0);
+  const totCred=ps.reduce((s,r)=>s+(parseFloat(r.creditAmt||r["Credit Amt"])||0),0);
   const totRcvd=pr.reduce((s,r)=>s+(parseFloat(r.Amount||r.amount)||0),0);
   const totOut=CUSTOMERS.reduce((s,c)=>s+Math.max(0,getLedgerBal(c.name)),0);
   document.getElementById("rpt-overview").innerHTML=`
@@ -1375,7 +1402,6 @@ function setRptPeriod(p){
   ["today","week","month","custom"].forEach(x=>{ const el=document.getElementById("rp-"+x); if(el){ el.classList.toggle("on",x===p); el.classList.toggle("retail",x===p); } });
   const cb=document.getElementById("rp-custom-box"); if(cb) cb.style.display=p==="custom"?"block":"none";
   if(p==="custom"){
-    // Set default from/to to current month if blank
     const t=today();
     const fromEl=document.getElementById("rpt-from"), toEl=document.getElementById("rpt-to");
     if(fromEl&&!fromEl.value) fromEl.value=t.substring(0,7)+"-01";
@@ -1392,7 +1418,7 @@ function getRptRange(){
   return{from,to,label:from+" to "+to};
 }
 
-// ── HELPERS ───────────────────────────────────────────────────
+// ─── HELPERS ───────────────────────────────────────────────────
 const fmt=n=>"₹"+Number(n).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
 const today=()=>new Date().toISOString().split("T")[0];
 function toast(msg,type){ const t=document.getElementById("toast"); t.textContent=msg; t.className="toast "+(type||""); t.classList.add("on"); setTimeout(()=>t.classList.remove("on"),3200); }
@@ -1406,7 +1432,7 @@ function setBusy(id,busy){
   }
 }
 
-// ── PWA ───────────────────────────────────────────────────────
+// ─── PWA ───────────────────────────────────────────────────────
 (function(){
   const m={name:"Vedantlaxmi Enterprises",short_name:"VLE Stock",start_url:".",display:"standalone",orientation:"portrait",background_color:"#f1f5f9",theme_color:"#1e40af",icons:[{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%231e40af'/><text y='130' x='40' font-size='110'>🥛</text></svg>",sizes:"192x192",type:"image/svg+xml"}]};
   const mb=new Blob([JSON.stringify(m)],{type:"application/manifest+json"});
@@ -1417,16 +1443,14 @@ function setBusy(id,busy){
   }
 })();
 
-// ── INIT ──────────────────────────────────────────────────────
+// ─── INIT ──────────────────────────────────────────────────────
 (function init(){
   const t=today();
   ["pur-date","opur-date","sal-date","osal-date","rec-date"].forEach(id=>{const el=document.getElementById(id);if(el) el.value=t;});
   ["pur-sup","opur-sup"].forEach(id=>{const el=document.getElementById(id);if(el) el.value="Gokul — Kolhapur Zilla Sahakari";});
   buildPayOptions("sal","retail");
   buildPayOptions("osal","retail");
-  // Security gate — must run after DOM ready
   initSecurity();
-  // Auto-refresh every 10 minutes (silent, no disruption)
   setInterval(()=>{ if(!_syncing&&(document.getElementById("scr-staff").classList.contains("on")||document.getElementById("scr-owner").classList.contains("on"))) syncData(); }, 600000);
 })();
 </script>
